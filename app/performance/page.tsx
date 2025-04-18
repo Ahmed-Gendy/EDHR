@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { downloadStringAsFile, objectsToCSV } from "@/lib/csv-utils"
+import { useCallback } from "react"
 
 async function getPerformanceData() {
   // Get all daily workers
@@ -101,7 +102,7 @@ export default async function PerformancePage() {
   await requireAuth()
   const { workerPerformance, overallStats } = await getPerformanceData()
 
-  const handleExportData = () => {
+  const handleExportData = useCallback(() => {
     const data = workerPerformance
       .filter((wp) => wp.averageScores)
       .map((wp) => ({
@@ -120,7 +121,7 @@ export default async function PerformancePage() {
     // Use our CSV utilities directly instead of exportToExcel
     const csvContent = objectsToCSV(data)
     downloadStringAsFile(csvContent, "Worker_Performance_Summary.csv")
-  }
+  }, [workerPerformance])
 
   const getRatingColor = (score: number) => {
     if (score >= 4.5) return "text-green-600"

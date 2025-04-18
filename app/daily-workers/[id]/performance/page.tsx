@@ -12,6 +12,7 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { downloadStringAsFile, objectsToCSV } from "@/lib/csv-utils"
+import { useCallback } from "react"
 
 interface PerformanceEvaluation {
   id: string
@@ -106,7 +107,7 @@ export default async function WorkerPerformancePage({ params }: { params: { id: 
   await requireAuth()
   const { worker, evaluations, averageScores, attendanceStats, attendanceRate } = await getWorkerPerformance(params.id)
 
-  const handleExportEvaluations = () => {
+  const handleExportEvaluations = useCallback(() => {
     const data = evaluations.map((evaluation) => ({
       Date: evaluation.evaluationDate,
       Type: evaluation.evaluationType,
@@ -125,7 +126,7 @@ export default async function WorkerPerformancePage({ params }: { params: { id: 
     // Use our CSV utilities directly
     const csvContent = objectsToCSV(data)
     downloadStringAsFile(csvContent, `Performance_${worker.firstName}_${worker.lastName}.csv`)
-  }
+  }, [evaluations, worker.firstName, worker.lastName])
 
   const getRatingColor = (score: number) => {
     if (score >= 4.5) return "text-green-600 bg-green-50"

@@ -20,7 +20,7 @@ import {
   CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { logout } from "@/lib/auth"
 
 const sidebarLinks = [
@@ -109,19 +109,20 @@ export function Sidebar() {
   const router = useRouter()
   const [userRole, setUserRole] = useState<string | null>(null)
 
+  const fetchSession = useCallback(() => {
+    try {
+      const sessionStr = localStorage.getItem("session")
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr)
+        setUserRole(session.role)
+      }
+    } catch (error) {
+      console.error("Error parsing session:", error)
+    }
+  }, [])
+
   useEffect(() => {
     // Get the user's role from localStorage
-    const fetchSession = () => {
-      try {
-        const sessionStr = localStorage.getItem("session")
-        if (sessionStr) {
-          const session = JSON.parse(sessionStr)
-          setUserRole(session.role)
-        }
-      } catch (error) {
-        console.error("Error parsing session:", error)
-      }
-    }
 
     fetchSession()
 
@@ -131,17 +132,17 @@ export function Sidebar() {
     return () => {
       window.removeEventListener("storage", fetchSession)
     }
-  }, [])
+  }, [fetchSession])
 
   // Filter sidebar links based on user role
   const filteredLinks = userRole ? sidebarLinks.filter((link) => link.roles.includes(userRole)) : []
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     const result = await logout()
     if (result.success) {
       router.push("/login")
     }
-  }
+  }, [router])
 
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
