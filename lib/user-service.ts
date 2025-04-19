@@ -7,7 +7,7 @@ import {
   type User as FirebaseUser,
   sendPasswordResetEmail,
 } from "firebase/auth"
-import { ref, set, get, remove, update, query, orderByChild, equalTo } from "firebase/database"
+import { ref, set, get, remove, update } from "firebase/database"
 import { auth, database } from "./firebase"
 
 export interface User {
@@ -212,17 +212,22 @@ export async function sendPasswordReset(email: string): Promise<boolean> {
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
+    // Instead of using query with orderByChild which requires an index,
+    // we'll fetch all users and filter them in memory
     const usersRef = ref(database, "users")
-    const userQuery = query(usersRef, orderByChild("email"), equalTo(email))
-    const snapshot = await get(userQuery)
+    const snapshot = await get(usersRef)
 
     if (snapshot.exists()) {
-      // There should only be one user with this email
-      let user: User | null = null
+      let matchingUser: User | null = null
+
       snapshot.forEach((childSnapshot) => {
-        user = childSnapshot.val() as User
+        const userData = childSnapshot.val() as User
+        if (userData.email === email) {
+          matchingUser = userData
+        }
       })
-      return user
+
+      return matchingUser
     }
     return null
   } catch (error) {
@@ -233,15 +238,20 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
 export async function getUsersByRole(role: string): Promise<User[]> {
   try {
+    // Similarly, fetch all users and filter by role in memory
     const usersRef = ref(database, "users")
-    const userQuery = query(usersRef, orderByChild("role"), equalTo(role))
-    const snapshot = await get(userQuery)
+    const snapshot = await get(usersRef)
 
     if (snapshot.exists()) {
       const users: User[] = []
+
       snapshot.forEach((childSnapshot) => {
-        users.push(childSnapshot.val() as User)
+        const userData = childSnapshot.val() as User
+        if (userData.role === role) {
+          users.push(userData)
+        }
       })
+
       return users
     }
     return []

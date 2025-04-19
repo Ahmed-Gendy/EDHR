@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/ui/dashboard-shell"
 import { Button } from "@/components/ui/button"
 import { Plus, FileSpreadsheet } from "lucide-react"
 import Link from "next/link"
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import { firestore } from "@/lib/firebase"
 import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,12 +15,18 @@ async function getTodayAttendance() {
   today.setHours(0, 0, 0, 0)
   const todayStr = today.toISOString().split("T")[0]
 
-  // Get today's attendance records
-  const attendanceQuery = query(
-    collection(firestore, "dailyAttendance"),
-    where("date", "==", todayStr),
-    orderBy("createdAt", "desc"),
-  )
+  // Find the query that's causing the issue
+  // const attendanceQuery = query(
+  //   collection(firestore, "dailyAttendance"),
+  //   where("date", "==", todayStr),
+  //   orderBy("createdAt", "desc"),
+  // )
+
+  // Replace it with a simpler query that doesn't require a composite index
+  const attendanceQuery = query(collection(firestore, "dailyAttendance"), where("date", "==", todayStr))
+
+  // Note: We're removing the orderBy clause to avoid needing a composite index
+
   const attendanceSnapshot = await getDocs(attendanceQuery)
 
   // Get all daily workers
