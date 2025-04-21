@@ -7,7 +7,7 @@ import {
   type User as FirebaseUser,
   sendPasswordResetEmail,
 } from "firebase/auth"
-import { ref, set, get, remove, update } from "firebase/database"
+import { ref, set, get, remove, update, query, orderByChild, equalTo } from "firebase/database"
 import { auth, database } from "./firebase"
 
 export interface User {
@@ -212,22 +212,17 @@ export async function sendPasswordReset(email: string): Promise<boolean> {
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    // Instead of using query with orderByChild which requires an index,
-    // we'll fetch all users and filter them in memory
     const usersRef = ref(database, "users")
-    const snapshot = await get(usersRef)
+    const userQuery = query(usersRef, orderByChild("email"), equalTo(email))
+    const snapshot = await get(userQuery)
 
     if (snapshot.exists()) {
-      let matchingUser: User | null = null
-
+      // There should only be one user with this email
+      let user: User | null = null
       snapshot.forEach((childSnapshot) => {
-        const userData = childSnapshot.val() as User
-        if (userData.email === email) {
-          matchingUser = userData
-        }
+        user = childSnapshot.val() as User
       })
-
-      return matchingUser
+      return user
     }
     return null
   } catch (error) {
@@ -238,20 +233,15 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 
 export async function getUsersByRole(role: string): Promise<User[]> {
   try {
-    // Similarly, fetch all users and filter by role in memory
     const usersRef = ref(database, "users")
-    const snapshot = await get(usersRef)
+    const userQuery = query(usersRef, orderByChild("role"), equalTo(role))
+    const snapshot = await get(userQuery)
 
     if (snapshot.exists()) {
       const users: User[] = []
-
       snapshot.forEach((childSnapshot) => {
-        const userData = childSnapshot.val() as User
-        if (userData.role === role) {
-          users.push(userData)
-        }
+        users.push(childSnapshot.val() as User)
       })
-
       return users
     }
     return []

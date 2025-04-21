@@ -113,7 +113,13 @@ export async function GET(request: NextRequest) {
       {} as Record<string, string>,
     )
 
-    const attendance = attendanceResult.data.map((record) => ({
+    // Sort the records manually after fetching
+    const sortedAttendanceData = [...attendanceResult.data].sort((a, b) => {
+      // Sort by date (most recent first)
+      return new Date(b.date).getTime() - new Date(a.date).getTime()
+    })
+
+    const attendance = sortedAttendanceData.map((record) => ({
       id: record.id,
       worker_id: record.workerId,
       worker_name: workers[record.workerId] || "Unknown Worker",
