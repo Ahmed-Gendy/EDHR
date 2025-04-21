@@ -1,4 +1,4 @@
-"use client"
+"\"use client"
 
 import { auth, database } from "./firebase"
 import {
@@ -64,25 +64,10 @@ export async function login(email: string, password: string) {
   }
 }
 
-// Update the logout function to properly call the API endpoint
 export async function logout() {
   try {
-    // Call the logout API endpoint
-    const response = await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    // Check if the request was successful
-    if (!response.ok) {
-      throw new Error("Logout request failed")
-    }
-
-    // Clear local storage
+    await firebaseSignOut(auth)
     localStorage.removeItem("session")
-
     return { success: true }
   } catch (error) {
     console.error("Logout error:", error)

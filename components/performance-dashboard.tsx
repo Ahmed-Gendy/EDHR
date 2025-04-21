@@ -1,6 +1,5 @@
 "use client"
 
-import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import Link from "next/link"
@@ -9,16 +8,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { downloadStringAsFile, objectsToCSV } from "@/lib/csv-utils"
+import { useCallback } from "react"
+
+interface WorkerPerformance {
+  worker: {
+    id: string
+    firstName: string
+    lastName: string
+    skillType: string
+  }
+  latestEvaluation: any
+  averageScores: {
+    quality: number
+    productivity: number
+    reliability: number
+    safety: number
+    teamwork: number
+    overall: number
+  } | null
+  evaluationCount: number
+}
+
+interface OverallStats {
+  totalWorkers: number
+  evaluatedWorkers: number
+  averageOverallScore: number
+  topPerformers: number
+  lowPerformers: number
+}
 
 interface PerformanceDashboardProps {
-  workerPerformance: any[]
-  overallStats: {
-    totalWorkers: number
-    evaluatedWorkers: number
-    averageOverallScore: number
-    topPerformers: number
-    lowPerformers: number
-  }
+  workerPerformance: WorkerPerformance[]
+  overallStats: OverallStats
 }
 
 export function PerformanceDashboard({ workerPerformance, overallStats }: PerformanceDashboardProps) {
@@ -28,16 +49,17 @@ export function PerformanceDashboard({ workerPerformance, overallStats }: Perfor
       .map((wp) => ({
         "Worker Name": `${wp.worker.firstName} ${wp.worker.lastName}`,
         "Skill Type": wp.worker.skillType,
-        "Overall Rating": wp.averageScores.overall.toFixed(1),
-        Quality: wp.averageScores.quality.toFixed(1),
-        Productivity: wp.averageScores.productivity.toFixed(1),
-        Reliability: wp.averageScores.reliability.toFixed(1),
-        Safety: wp.averageScores.safety.toFixed(1),
-        Teamwork: wp.averageScores.teamwork.toFixed(1),
+        "Overall Rating": wp.averageScores?.overall.toFixed(1),
+        Quality: wp.averageScores?.quality.toFixed(1),
+        Productivity: wp.averageScores?.productivity.toFixed(1),
+        Reliability: wp.averageScores?.reliability.toFixed(1),
+        Safety: wp.averageScores?.safety.toFixed(1),
+        Teamwork: wp.averageScores?.teamwork.toFixed(1),
         Evaluations: wp.evaluationCount,
-        "Latest Evaluation": wp.latestEvaluation.evaluationDate,
+        "Latest Evaluation": wp.latestEvaluation?.evaluationDate,
       }))
 
+    // Use our CSV utilities directly instead of exportToExcel
     const csvContent = objectsToCSV(data)
     downloadStringAsFile(csvContent, "Worker_Performance_Summary.csv")
   }, [workerPerformance])

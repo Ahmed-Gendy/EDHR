@@ -138,15 +138,9 @@ export function Sidebar() {
   const filteredLinks = userRole ? sidebarLinks.filter((link) => link.roles.includes(userRole)) : []
 
   const handleLogout = useCallback(async () => {
-    try {
-      const result = await logout()
-      if (result.success) {
-        router.push("/login")
-      } else {
-        console.error("Logout failed:", result.message)
-      }
-    } catch (error) {
-      console.error("Error during logout:", error)
+    const result = await logout()
+    if (result.success) {
+      router.push("/login")
     }
   }, [router])
 

@@ -15,8 +15,18 @@ async function getTodayAttendance() {
   today.setHours(0, 0, 0, 0)
   const todayStr = today.toISOString().split("T")[0]
 
-  // Get today's attendance records - removed the orderBy to avoid needing a composite index
+  // Find the query that's causing the issue
+  // const attendanceQuery = query(
+  //   collection(firestore, "dailyAttendance"),
+  //   where("date", "==", todayStr),
+  //   orderBy("createdAt", "desc"),
+  // )
+
+  // Replace it with a simpler query that doesn't require a composite index
   const attendanceQuery = query(collection(firestore, "dailyAttendance"), where("date", "==", todayStr))
+
+  // Note: We're removing the orderBy clause to avoid needing a composite index
+
   const attendanceSnapshot = await getDocs(attendanceQuery)
 
   // Get all daily workers
@@ -68,16 +78,6 @@ async function getTodayAttendance() {
       status: data.status,
       notes: data.notes,
     }
-  })
-
-  // Sort the records manually after fetching them
-  // This replaces the orderBy in the query
-  attendance.sort((a, b) => {
-    // Sort by most recent first (if we have timestamps)
-    if (a.checkIn && b.checkIn) {
-      return b.checkIn - a.checkIn
-    }
-    return 0
   })
 
   // Get stats
